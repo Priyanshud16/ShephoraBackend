@@ -1,7 +1,7 @@
 const cors = require('cors')
 const express = require("express");
 require("dotenv").config();
-const PORT = process.env.PORT || 8080;
+const Port = process.env.PORT || 3000;
 const connection = require("./config/db");
 const userRouter = require("./routes/user.routes");
 const productRouter = require("./routes/product.routes");
@@ -19,10 +19,10 @@ server.get("/", (_, res) => {
   res.status(200).send("Health check done, Server is Running.");
 });
 
-server.listen(PORT, async () => {
+server.listen(Port, async () => {
   try {
     await connection;
-    console.log("Server is Running and DB is Connected.");
+    console.log(`Server is Running and DB is Connected ${Port}`);
   } catch (error) {
     console.log(error.message);
   }

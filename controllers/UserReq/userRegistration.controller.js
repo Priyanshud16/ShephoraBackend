@@ -1,4 +1,4 @@
-const bcrypt = require("bcrypt");
+const bcryptjs = require("bcryptjs");
 const UserModel = require("../../models/user.model");
 
 const userRegistration = async (req, res) => {
@@ -11,30 +11,27 @@ const userRegistration = async (req, res) => {
       return res.status(401).send({ message: "User already Exists." });
     }
 
-    bcrypt.hash(password, 2, async (err, hash) => {
-      if (err) {
-        return res.status(500).send("Error in hashing password.");
-      }
+    // Promisify bcryptjs.hash using async/await
+    const hashedPassword = await bcryptjs.hash(password, 10); // 10 is a common salt round value
 
-      const newUser = new UserModel({
-        username,
-        email,
-        password: hash,
-        phone,
-        ZIP,
-      });
+    const newUser = new UserModel({
+      username,
+      email,
+      password: hashedPassword,
+      phone,
+      ZIP,
+    });
 
-      await newUser.save();
+    await newUser.save();
 
-      res.status(201).send({
-        message: `Congratulations ${username} you are registered`,
-        "User": newUser,
-      });
+    res.status(201).send({
+      message: `Congratulations ${username} you are registered`,
+      User: newUser,
     });
   } catch (error) {
     res
       .status(500)
-      .send({ message: `Wrong Details try again: ${error.message}` });
+      .send({ message: `Registration failed: ${error.message}` });
   }
 };
 

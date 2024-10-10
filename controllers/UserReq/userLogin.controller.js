@@ -1,5 +1,5 @@
 require("dotenv").config();
-const bcrypt = require("bcrypt");
+const bcryptjs = require("bcryptjs");
 const jwt = require("jsonwebtoken");
 const UserModel = require("../../models/user.model");
 
@@ -12,29 +12,27 @@ const userLogin = async (req, res) => {
     if (!user) {
       return res.status(401).send({ message: `Wrong Email, Register first` });
     }
-    bcrypt.compare(password, user.password, async (err, result) => {
-      if (err) {
-        return res
-          .status(500)
-          .send({ message: `Error in Comparing password: ${err.message}` });
-      }
 
-      if (result) {
-        const token = jwt.sign(
-          {
-            username: user.username,
-            email: user.email,
-            phone: user.phone,
-            userID: user._id,
-          },
-          process.env.JWT_SECRET
-        );
+    // Promisify bcryptjs.compare for cleaner code
+    const isMatch = await bcryptjs.compare(password, user.password);
 
-        res.status(200).send({ message: "Login successful", "token": token, user });
-      }
-    });
+    if (isMatch) {
+      const token = jwt.sign(
+        {
+          username: user.username,
+          email: user.email,
+          phone: user.phone,
+          userID: user._id,
+        },
+        process.env.JWT_SECRET
+      );
+
+      return res.status(200).send({ message: "Login successful", token, user });
+    } else {
+      return res.status(401).send({ message: "Invalid Password" });
+    }
   } catch (error) {
-    res.status(500).send({ message: `Wrong Credentials: ${error.message}` });
+    res.status(500).send({ message: `Server Error: ${error.message}` });
   }
 };
 
